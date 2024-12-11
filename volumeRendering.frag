@@ -2,6 +2,7 @@
 #extension GL_ARB_compatibility: enable
 
 in vec3 pixelPosition;
+in vec3 Color;
 uniform vec3 eyePosition;
 uniform vec3 objectMin;
 uniform vec3 objectMax;
@@ -12,10 +13,10 @@ uniform sampler1D transferFunction;
 
 void main()
 {
-	vec4 composedColor=vec4(0,0,0,0);
+    vec4 composedColor=vec4(0,0,0,0);
 
-	// .. ToDo
+    // .. ToDo
 
-	
-    gl_FragColor = composedColor;
+    
+    gl_FragColor = vec4(Color, 1.0);
 }

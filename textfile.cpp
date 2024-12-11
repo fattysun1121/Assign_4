@@ -80,6 +80,7 @@ GLuint loadShader(GLenum shadertype, char *c)
 	char *ss = textFileRead( c );
 	const char *css = ss;
 	glShaderSource(s, 1, &css, NULL);
+	printf(c);
 	free( ss );
 	glCompileShader( s );
 
