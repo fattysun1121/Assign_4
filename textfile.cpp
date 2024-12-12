@@ -140,16 +140,23 @@ GLuint createGLSLProgram(char *vs, char *gs, char *fs)
 		assert( false );
 	}
 	
-	glValidateProgram(p);
-	glGetProgramiv(p, GL_VALIDATE_STATUS, &status);
+	// Have to do a workaround since this causes problem with certain drivers
+	
 
-	if (status == GL_FALSE)
-	{
-		std::cerr << "Error validating program: "<< p << std::endl;
-		assert( false );
-	}
+	//glValidateProgram(p);
+	//glGetProgramiv(p, GL_VALIDATE_STATUS, &status);
 
-	// validation passed.. therefore, we will use this program
+	//if (status == GL_FALSE)
+	//{
+	//	GLint sizeLog;
+	//	glGetProgramiv(p, GL_INFO_LOG_LENGTH, &sizeLog);
+	//	char* log = new char[sizeLog + 1];
+	//	glGetProgramInfoLog(p, sizeLog, NULL, log);
+	//	std::cerr << "Error validating program: "<< log << std::endl;
+	//	assert( false );
+	//}
+
+	//// validation passed.. therefore, we will use this program
 	glUseProgram(p);
 
 	return p;
