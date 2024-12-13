@@ -21,7 +21,7 @@ void main()
     // -------------------
     vec3 entryPoint = pixelPosition;
     vec2 backFaceTexCoord = gl_FragCoord.xy / vec2(WIDTH, HEIGHT);
-    vec3 exitPoint = texture(backFaceTex, backFaceTexCoord).xyz;
+    vec3 exitPoint = texture(backFaceTex, vec2(1,0) - backFaceTexCoord).xyz;
     if (entryPoint == exitPoint) 
         discard;
 
@@ -47,6 +47,6 @@ void main()
    
     // ----------------
     // Ray marching end
-    //gl_FragColor = vec4(exitPoint, 0);
-    gl_FragColor = vec4(vec3(composedColor) / composedColor.a, 0);
+    gl_FragColor = vec4(exitPoint, 0);
+    //gl_FragColor = vec4(vec3(composedColor) / composedColor.a, 0);
 }
