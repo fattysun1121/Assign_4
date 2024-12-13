@@ -140,9 +140,6 @@ GLuint createGLSLProgram(char *vs, char *gs, char *fs)
 		assert( false );
 	}
 	
-	// Have to do a workaround since this causes problem with certain drivers
-	
-
 	//glValidateProgram(p);
 	//glGetProgramiv(p, GL_VALIDATE_STATUS, &status);
 
@@ -157,7 +154,7 @@ GLuint createGLSLProgram(char *vs, char *gs, char *fs)
 	//}
 
 	//// validation passed.. therefore, we will use this program
-	glUseProgram(p);
+	//glUseProgram(p);
 
 	return p;
 }
