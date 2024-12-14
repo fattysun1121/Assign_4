@@ -1,6 +1,6 @@
 #version 140
 #extension GL_ARB_compatibility: enable
-#define STEP_SIZE 0.0005f
+#define STEP_SIZE 0.001f
 #define WIN_WIDTH 600.0f
 #define WIN_HEIGHT 600.0f
 #define MIP 1
@@ -12,7 +12,7 @@ in vec3 pixelPosition;
 //uniform vec3 eyePosition;
 //uniform vec3 objectMin;
 //uniform vec3 objectMax;
-//uniform vec3 up;
+uniform vec3 up;
 uniform sampler3D tex;
 uniform sampler2D backFaceTex;
 uniform sampler1D transferFuncTex;
@@ -54,22 +54,40 @@ void main()
     }
     else if (mode == ALPHA_COMPO) {
    
-        while (distanceTraveled < marchLen && composedColor.a < 1.0) {             
+        while (true) {             
             float intensity = texture(tex, voxelCoord).x;  // sampled intensity at voxelCoord
             vec4 transFuncOutput = texture(transferFuncTex, intensity);  // Transfer function sampled RGBA
-            transFuncOutput.a = pow(transFuncOutput.a, transparency);
-            if (transFuncOutput.a > 0) {
-                composedColor = vec4(
-                composedColor.rgb + (1 - composedColor.a) * transFuncOutput.rgb,    // accumulated color
-                composedColor.a + (1 - composedColor.a) * transFuncOutput.a);       // accumulated alpha
+            
+            if (transFuncOutput.a > 0.0) {
+                transFuncOutput.a = pow(transFuncOutput.a, 100);
+                composedColor.rgb += (1 - composedColor.a) * transFuncOutput.rgb;
+                composedColor.a += (1 - composedColor.a) * transFuncOutput.a;
             }
             
-            voxelCoord = voxelCoord + dt * marchDir;  // marches forward 
+            voxelCoord += dt * marchDir;  // marches forward 
             distanceTraveled += dt;
+            if (distanceTraveled < marchLen) {
+                composedColor.rgb = composedColor.rgb * composedColor.a + (1 - composedColor.a) * vec3(1.0, 1.0, 1.0);
+                break;
+            } else if (composedColor.a > 1.0) {
+                composedColor.a = 1.0;
+                break;
+            }
+            
         }
+
     } 
     else if (mode == ISOSURFACE) {
+        while (distanceTraveled < marchLen) {
+            float intensity = texture(tex, voxelCoord).x;   // sampled intensity at voxelCoord
+            
+      
+            voxelCoord = voxelCoord + dt * marchDir;        // marches forward 
+            distanceTraveled += dt;
+        }
+     
     }
+   
 
     gl_FragColor = composedColor;
   
