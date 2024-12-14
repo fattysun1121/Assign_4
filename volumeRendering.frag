@@ -1,9 +1,8 @@
 #version 140
 #extension GL_ARB_compatibility: enable
-#define STEP_COUNT 1600.0f
+#define STEP_SIZE 0.0005f
 #define WIN_WIDTH 600.0f
 #define WIN_HEIGHT 600.0f
-
 #define MIP 1
 #define ISOSURFACE 2
 #define ALPHA_COMPO 3
@@ -28,47 +27,48 @@ void main()
     vec3 entryPoint = pixelPosition;
     vec2 backFaceTexCoord = gl_FragCoord.xy / vec2(WIN_WIDTH, WIN_HEIGHT);
     vec3 exitPoint = texture(backFaceTex, backFaceTexCoord).xyz;
-    if (entryPoint == exitPoint) 
+    if (entryPoint == exitPoint)                        // no need to process points outside of the bounding box
         discard;
     vec4 composedColor = vec4(0,0,0,0);
     vec3 marchDir = normalize(exitPoint - entryPoint);  // normalized marching direction
     float marchLen = length(exitPoint - entryPoint);    // total length of marching
-    float dt = marchLen / STEP_COUNT;                   // distance traveled per step i.e. the step size
+    float dt = STEP_SIZE;  // distance traveled per step
+    float distanceTraveled = 0;  // total distance traveled so far
     vec3 voxelCoord = entryPoint;
 
-    // Different ray marching algorithms based on selected rendering mode
-    // ------------------------------------------------------------------
+    // Different ray marching algorithms based on selected rendering mode (MIP, isosurface processing, alpha compositioning)
+    // ---------------------------------------------------------------------------------------------------------------------
     if (mode == MIP) {
         float maxIntensity = texture(tex, voxelCoord).x;    
-
-        for (int i = 0; i < STEP_COUNT; i++) {
+       
+        while (distanceTraveled < marchLen) {
             float intensity = texture(tex, voxelCoord).x;   // sampled intensity at voxelCoord
             if (intensity > maxIntensity)
                 maxIntensity = intensity;
       
             voxelCoord = voxelCoord + dt * marchDir;        // marches forward 
+            distanceTraveled += dt;
         }
-
+     
         composedColor = vec4(maxIntensity, maxIntensity, maxIntensity, 0);
     }
     else if (mode == ALPHA_COMPO) {
-        
-
-        for (int i = 0; i < STEP_COUNT; i++) {                          // Note that this algo starts from i = 1
-            float intensity = texture(tex, voxelCoord).x;               // sampled intensity at voxelCoord
-            vec4 transFuncOutput = texture(transferFuncTex, intensity); // Transfer function sampled RGBA
-            vec3 currColor = transFuncOutput.rgb;
-            float currAlpha = transFuncOutput.a;
-            if (currAlpha > 0) {
+   
+        while (distanceTraveled < marchLen && composedColor.a < 1.0) {             
+            float intensity = texture(tex, voxelCoord).x;  // sampled intensity at voxelCoord
+            vec4 transFuncOutput = texture(transferFuncTex, intensity);  // Transfer function sampled RGBA
+            transFuncOutput.a = pow(transFuncOutput.a, transparency);
+            if (transFuncOutput.a > 0) {
                 composedColor = vec4(
-                    composedColor.rgb + (1 - composedColor.a) * currColor,  // accumulated color
-                    composedColor.a + (1 - composedColor.a) * currAlpha);   // accumulated alpha
+                composedColor.rgb + (1 - composedColor.a) * transFuncOutput.rgb,    // accumulated color
+                composedColor.a + (1 - composedColor.a) * transFuncOutput.a);       // accumulated alpha
             }
             
-            if (composedColor.a >= 1.0)
-                break;
-            voxelCoord = voxelCoord + dt * marchDir;                    // marches forward 
+            voxelCoord = voxelCoord + dt * marchDir;  // marches forward 
+            distanceTraveled += dt;
         }
+    } 
+    else if (mode == ISOSURFACE) {
     }
 
     gl_FragColor = composedColor;
