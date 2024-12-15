@@ -9,8 +9,8 @@
 
 in vec3 entryPoint;
 in vec3 viewPixelPos;
-uniform vec3 eyePosition;
-uniform vec3 up;
+in vec3 viewLightPos;
+uniform mat4 Mv;
 uniform sampler3D tex;
 uniform sampler2D backFaceTex;
 uniform sampler1D transferFuncTex;
@@ -21,10 +21,10 @@ vec3 applyPhong(vec3 position, vec3 normal, vec3 objColor) {
     vec3 Ld = vec3(1.0, 0.0, 1.0);
     vec3 Ls = vec3(0.0, 1.0, 1.0);
     vec3 La = vec3(1.0, 1.0, 0.0);
-    float Kd = 0.4, Ks = 0.8, Ka = 0.2;
+    float Kd = 1.0, Ks = 0.5, Ka = 0.2;
 
-    float alpha = 4;
-    vec3 lightSource = vec3(0.0, 2.0, 0.0);
+    float alpha = 32;
+    vec3 lightSource = viewLightPos;
 
     vec3 n = normalize(normal);
 	vec3 l = normalize(lightSource - position);
@@ -41,7 +41,8 @@ vec3 applyPhong(vec3 position, vec3 normal, vec3 objColor) {
 
 	// ambient
 	vec3 ambient = Ka * La;
-	vec3 color = (ambient + diffuse + specular) * objColor;
+	vec3 color = diffuse * objColor;
+    
 	return color;
 }
 
@@ -107,19 +108,19 @@ void main()
 
     } 
     else if (mode == ISOSURFACE) {
-        float isoThreshold = 125.0/255.0;
+        float isoThreshold = 120.0/255.0;
         while (distanceTraveled < marchLen) {            
             // Found the zero-crossing location
             float intensity = getIntensity(voxelCoord);
             if (getIntensity(voxelCoord) > isoThreshold) {
                 // compute gradient 
-                vec3 gradient = vec3(0.0);
+                vec4 gradient = vec4(0.0);
                 gradient.x = (getIntensity(voxelCoord - vec3(1, 0, 0)) - getIntensity(voxelCoord + vec3(1, 0, 0))) / 2.0;
                 gradient.y = (getIntensity(voxelCoord - vec3(0, 1, 0)) - getIntensity(voxelCoord + vec3(0, 1, 0))) / 2.0;
                 gradient.z = (getIntensity(voxelCoord - vec3(0, 0, 1)) - getIntensity(voxelCoord + vec3(0, 0, 1))) / 2.0;
                 // phong shading
-                
-                composedColor.rgb = applyPhong(viewPixelPos, gradient, vec3(texture(transferFuncTex, intensity)));
+                vec3 normal = vec3(Mv * gradient);  // converts normal to from world to view space
+                composedColor.rgb = applyPhong(viewPixelPos, normal, vec3(texture(transferFuncTex, intensity)));
                 break;
             }
             voxelCoord = voxelCoord + dt * marchDir;        // marches forward 
