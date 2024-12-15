@@ -53,26 +53,28 @@ void main()
         composedColor = vec4(maxIntensity, maxIntensity, maxIntensity, 0);
     }
     else if (mode == ALPHA_COMPO) {
-   
+        vec3 bgColor = vec3(0.0, 0.0, 0.0);
         while (true) {             
             float intensity = texture(tex, voxelCoord).x;  // sampled intensity at voxelCoord
             vec4 transFuncOutput = texture(transferFuncTex, intensity);  // Transfer function sampled RGBA
             
-            if (transFuncOutput.a > 0.0) {
-                transFuncOutput.a = pow(transFuncOutput.a, 100);
-                composedColor.rgb += (1 - composedColor.a) * transFuncOutput.rgb;
-                composedColor.a += (1 - composedColor.a) * transFuncOutput.a;
-            }
+            
+            transFuncOutput.a = pow(transFuncOutput.a, 10);
+            composedColor.rgb += (1 - composedColor.a) * transFuncOutput.rgb;
+            composedColor.a += (1 - composedColor.a) * transFuncOutput.a;
+            
             
             voxelCoord += dt * marchDir;  // marches forward 
             distanceTraveled += dt;
-            if (distanceTraveled < marchLen) {
-                composedColor.rgb = composedColor.rgb * composedColor.a + (1 - composedColor.a) * vec3(1.0, 1.0, 1.0);
-                break;
-            } else if (composedColor.a > 1.0) {
+            if (composedColor.a >= 0.95) {
                 composedColor.a = 1.0;
                 break;
             }
+            if (distanceTraveled > marchLen) {
+                composedColor.rgb = composedColor.rgb * composedColor.a + (1 - composedColor.a) * bgColor;
+                break;
+            }
+           
             
         }
 
