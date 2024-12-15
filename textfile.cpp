@@ -140,21 +140,21 @@ GLuint createGLSLProgram(char *vs, char *gs, char *fs)
 		assert( false );
 	}
 	
-	//glValidateProgram(p);
-	//glGetProgramiv(p, GL_VALIDATE_STATUS, &status);
+	glValidateProgram(p);
+	glGetProgramiv(p, GL_VALIDATE_STATUS, &status);
 
-	//if (status == GL_FALSE)
-	//{
-	//	GLint sizeLog;
-	//	glGetProgramiv(p, GL_INFO_LOG_LENGTH, &sizeLog);
-	//	char* log = new char[sizeLog + 1];
-	//	glGetProgramInfoLog(p, sizeLog, NULL, log);
-	//	std::cerr << "Error validating program: "<< log << std::endl;
-	//	assert( false );
-	//}
+	if (status == GL_FALSE)
+	{
+		GLint sizeLog;
+		glGetProgramiv(p, GL_INFO_LOG_LENGTH, &sizeLog);
+		char* log = new char[sizeLog + 1];
+		glGetProgramInfoLog(p, sizeLog, NULL, log);
+		std::cerr << "Error validating program: "<< log << std::endl;
+		assert( false );
+	}
 
-	//// validation passed.. therefore, we will use this program
-	//glUseProgram(p);
+	// validation passed.. therefore, we will use this program
+	glUseProgram(p);
 
 	return p;
 }
